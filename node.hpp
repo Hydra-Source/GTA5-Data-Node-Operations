@@ -57,16 +57,21 @@
 
 
     uint64_t** base_ptr = scan("E8 ? ? ? ? 48 8B 0D ? ? ? ? 8B D3 E8 ? ? ? ? 48 8B 0D ? ? ? ? 8B D3 48 83 C4 20 5B").add(0x13).add(3).rip().as<uint64_t**>();
+    using get_sync_tree_for_type = uint64_t * (*)(uint64_t* ptr, uint32_t object_type);
+	auto get_tree_for_type = scan("0F B7 CA 83 F9 07").as<get_sync_tree_for_type>();
 
-    inline void* get_data_node_vtable(const char* node)
+
+
+ inline void* get_data_node_vtable(const char* node, int type)
 	{
+		uint64_t* base = g_patterns.m_get_sync_tree_for_type(nullptr, type);
 		if (const auto& it = DataNodeOffsets.find(node); it != DataNodeOffsets.end())
 		{
-			return *reinterpret_cast<void***>((uint64_t) * reinterpret_cast<uint64_t**>(g_patterns.m_sync_node_base) + it->second);
+			return *reinterpret_cast<void***>((uint64_t)reinterpret_cast<uint64_t*>(base) + it->second);
 		}
 		else
 		{
-		  //Log fail
+			//log fail
 		}
 
 		return nullptr;
@@ -87,7 +92,7 @@
 			auto vtable = *(void**)node;
 			const auto vft = *(uintptr_t*)node;
 
-			if (vtable == get_data_node_vtable("CProjectSyncTree_CSectorDataNode"))
+			if (vtable == get_data_node_vtable("CProjectSyncTree_CSectorDataNode", object->m_object_type))
 			{
 				auto data = reinterpret_cast<CSectorDataNode*>(node);
                 //do stuff
