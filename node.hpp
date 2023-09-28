@@ -77,44 +77,47 @@ enum class eSyncTree
 		CTrainSyncTree
 	};
 
-inline void* get_node_common_data_operations_reader(eSyncTree tree, uint64_t offset)
-	{
-		uint64_t* base = g_patterns.m_get_sync_tree_for_type(nullptr, (int)tree);
-		return (*reinterpret_cast<void***>((uint64_t)reinterpret_cast<uint64_t*>(base) + (offset + 0xB0)))[1];
-	}
-
-inline void* get_node_common_data_operations_writer(eSyncTree tree, uint64_t offset)
-	{
-		uint64_t* base = g_patterns.m_get_sync_tree_for_type(nullptr, (int)tree);
-		return (*reinterpret_cast<void***>((uint64_t)reinterpret_cast<uint64_t*>(base) + (offset + 0xB0)))[2];
-	}
-
-inline void* get_node_function_from_vtable(eSyncTree tree, uint64_t offset, uint32_t index)
-	{
-		uint64_t* base = g_patterns.m_get_sync_tree_for_type(nullptr, (int)tree);
-		return (*reinterpret_cast<void***>((uint64_t)reinterpret_cast<uint64_t*>(base) + offset))[index];
-	}
-
-inline void* get_node_vtable(eSyncTree tree, uint64_t offset)
-	{
-		uint64_t* base = g_patterns.m_get_sync_tree_for_type(nullptr, (int)tree);
-		return *reinterpret_cast<void***>((uint64_t)reinterpret_cast<uint64_t*>(base) + offset);
-	}
-
- inline void* get_data_node_vtable(const char* node, int type)
-	{
-		uint64_t* base = g_patterns.m_get_sync_tree_for_type(nullptr, type);
+inline void* get_data_node_vtable(const char* node, int tree, int received_tree)
+{
+	if (received_tree == tree) {
+		uint64_t* base = g_patterns.m_get_sync_tree_for_type(nullptr, tree);
 		if (const auto& it = DataNodeOffsets.find(node); it != DataNodeOffsets.end())
 		{
 			return *reinterpret_cast<void***>((uint64_t)reinterpret_cast<uint64_t*>(base) + it->second);
 		}
 		else
 		{
-			//log fail
+			g_logger.insert(log_class::FATAL, "Failed to find data node key! ", node);
 		}
-
-		return nullptr;
 	}
+	return nullptr;
+}
+
+inline void* get_node_common_data_operations_reader(const char* node, int tree)
+{
+	uint64_t* base = g_patterns.m_get_sync_tree_for_type(nullptr, tree);
+	if (const auto& it = DataNodeOffsets.find(node); it != DataNodeOffsets.end())
+	{
+		return (*reinterpret_cast<void***>((uint64_t)reinterpret_cast<uint64_t*>(base) + (it->second + 0xB0)))[1];
+	}
+	else
+	{
+		g_logger.insert(log_class::FATAL, "Failed to find data node key! ", node);
+	}
+}
+
+inline void* get_node_common_data_operations_writer(const char* node, int tree)
+{
+	uint64_t* base = g_patterns.m_get_sync_tree_for_type(nullptr, tree);
+	if (const auto& it = DataNodeOffsets.find(node); it != DataNodeOffsets.end())
+	{
+		return (*reinterpret_cast<void***>((uint64_t)reinterpret_cast<uint64_t*>(base) + (it->second + 0xB0)))[1];
+	}
+	else
+	{
+		g_logger.insert(log_class::FATAL, "Failed to find data node key! ", node);
+	}
+}
 
     bool check_node(rage::netSyncNodeBase* node,  rage::netObject* object)
 	{
@@ -131,9 +134,9 @@ inline void* get_node_vtable(eSyncTree tree, uint64_t offset)
 			auto vtable = *(void**)node;
 			const auto vft = *(uintptr_t*)node;
 
-			if (vtable == get_data_node_vtable("CProjectSyncTree_CSectorDataNode", object->m_object_type))
+			if (vtable == get_data_node_vtable("CVehicleSyncTree_CVehicleCreationDataNode", (int)eSyncTree::CAutomobileSyncTree, object->m_object_type))
 			{
-				auto data = reinterpret_cast<CSectorDataNode*>(node);
+				auto data = reinterpret_cast<CVehicleCreationDataNode*>(node);
                 //do stuff
 			}
 		}
