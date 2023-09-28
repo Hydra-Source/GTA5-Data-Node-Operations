@@ -56,7 +56,6 @@
 	};
 
 
-    uint64_t** base_ptr = scan("E8 ? ? ? ? 48 8B 0D ? ? ? ? 8B D3 E8 ? ? ? ? 48 8B 0D ? ? ? ? 8B D3 48 83 C4 20 5B").add(0x13).add(3).rip().as<uint64_t**>();
     using get_sync_tree_for_type = uint64_t * (*)(uint64_t* ptr, uint32_t object_type);
 	auto get_tree_for_type = scan("0F B7 CA 83 F9 07").as<get_sync_tree_for_type>();
 
