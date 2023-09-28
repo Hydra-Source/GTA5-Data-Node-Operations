@@ -61,6 +61,46 @@
 	auto get_tree_for_type = scan("0F B7 CA 83 F9 07").as<get_sync_tree_for_type>();
 
 
+enum class eSyncTree
+	{
+		CAutomobileSyncTree,
+		CBikeSyncTree,
+		CBoatSyncTree,
+		CDoorSyncTree,
+		CHeliSyncTree,
+		CObjectSyncTree,
+		CPedSyncTree,
+		CPickupSyncTree,
+		CPickupPlacementSyncTree,
+		CPlaneSyncTree,
+		CSubmarineSyncTree,
+		CPlayerSyncTree,
+		CTrainSyncTree
+	};
+
+inline void* get_node_common_data_operations_reader(eSyncTree tree, uint64_t offset)
+	{
+		uint64_t* base = g_patterns.m_get_sync_tree_for_type(nullptr, (int)tree);
+		return (*reinterpret_cast<void***>((uint64_t)reinterpret_cast<uint64_t*>(base) + (offset + 0xB0)))[1];
+	}
+
+inline void* get_node_common_data_operations_writer(eSyncTree tree, uint64_t offset)
+	{
+		uint64_t* base = g_patterns.m_get_sync_tree_for_type(nullptr, (int)tree);
+		return (*reinterpret_cast<void***>((uint64_t)reinterpret_cast<uint64_t*>(base) + (offset + 0xB0)))[2];
+	}
+
+inline void* get_node_function_from_vtable(eSyncTree tree, uint64_t offset, uint32_t index)
+	{
+		uint64_t* base = g_patterns.m_get_sync_tree_for_type(nullptr, (int)tree);
+		return (*reinterpret_cast<void***>((uint64_t)reinterpret_cast<uint64_t*>(base) + offset))[index];
+	}
+
+inline void* get_node_vtable(eSyncTree tree, uint64_t offset)
+	{
+		uint64_t* base = g_patterns.m_get_sync_tree_for_type(nullptr, (int)tree);
+		return *reinterpret_cast<void***>((uint64_t)reinterpret_cast<uint64_t*>(base) + offset);
+	}
 
  inline void* get_data_node_vtable(const char* node, int type)
 	{
